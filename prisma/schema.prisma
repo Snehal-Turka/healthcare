@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Report {
+  id                 String    @id @default(cuid())
+  status             String    @default("processing") // processing | ready | failed
+  providerId         String
+  audioRef           String
+  detectedLanguage   String?
+  transcript         String?
+  content            String?   // JSON-serialized ReportContent
+  freeVisitDeadline  DateTime?
+  medicineExpiryDate DateTime?
+  stageTimings       String    @default("{}") // JSON-serialized StageTimings
+  error              String?
+  createdAt          DateTime  @default(now())
+  generatedAt        DateTime?
+}

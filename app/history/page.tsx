@@ -16,11 +16,27 @@ export default async function HistoryPage() {
           <h1 className="clinical-page-title">History</h1>
         </div>
         <Link href="/" className="clinical-action">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           New consultation
         </Link>
       </div>
       {reports.length === 0 && (
-        <p className="empty-state">No reports yet.</p>
+        <p className="empty-state">
+          No reports yet. Start a new consultation to see your history here.
+        </p>
       )}
       {reports.length > 0 && (
         <div className="history-panel">

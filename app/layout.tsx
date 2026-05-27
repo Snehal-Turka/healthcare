@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Manas — Consultation Scribe",
-  description: "AI-assisted psychiatric consultation report generator",
+  description:
+    "AI-assisted psychiatric consultation report generator — transcribe, summarize, and manage clinical documentation effortlessly.",
 };
 
 export default function RootLayout({

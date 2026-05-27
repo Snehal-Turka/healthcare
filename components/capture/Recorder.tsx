@@ -195,7 +195,7 @@ export function Recorder({
     : error;
 
   return (
-    <div className="clinical-flow">
+    <div className="capture-zone-body">
       <div className="recording-row">
         {!recording ? (
           <button
@@ -210,7 +210,16 @@ export function Recorder({
                 : undefined
             }
           >
-            Record consultation
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="8" />
+            </svg>
+            Start recording
           </button>
         ) : (
           <button
@@ -218,25 +227,34 @@ export function Recorder({
             onClick={stop}
             className="button-primary"
           >
-            Stop and generate
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+            Stop &amp; generate report
           </button>
         )}
         {recording && (
           <span className="live-indicator" aria-live="polite">
-            Recording live
+            Recording
           </span>
         )}
       </div>
 
       {liveTranscript && (
-        <div className="live-transcript">
+        <div className="live-transcript" style={{ marginTop: 14 }}>
           <p className="meta-label">Live transcript</p>
           <p>{liveTranscript}</p>
         </div>
       )}
 
       {visibleError && (
-        <p className="error-note" id="recording-error">
+        <p className="error-note" id="recording-error" style={{ marginTop: 10 }}>
           {visibleError}
         </p>
       )}

@@ -1,13 +1,11 @@
 "use client";
 import { useRef } from "react";
 import type { ProviderId } from "@/lib/domain/report/schema";
-import { ProviderSelect } from "./ProviderSelect";
 
 export function UploadPanel({
   onSubmit,
   busy,
   providerId,
-  onProviderChange,
 }: {
   onSubmit: (file: File, providerId: ProviderId) => void;
   busy: boolean;
@@ -17,15 +15,7 @@ export function UploadPanel({
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="clinical-panel">
-      <div className="clinical-panel-header">
-        <h2 className="clinical-panel-title">New consultation</h2>
-        <ProviderSelect
-          value={providerId}
-          onChange={onProviderChange}
-          disabled={busy}
-        />
-      </div>
+    <div className="capture-zone-body">
       <input
         ref={inputRef}
         type="file"
@@ -37,8 +27,8 @@ export function UploadPanel({
         }}
         className="clinical-file-input"
       />
-      <p className="clinical-panel-note">
-        Upload an audio recording of the consultation, or record live below.
+      <p className="capture-zone-hint">
+        Supported formats: MP3, WAV, M4A, WebM, OGG
       </p>
     </div>
   );

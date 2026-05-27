@@ -1,4 +1,5 @@
 import type { ReportSection } from "@/lib/domain/report/schema";
+import type { ApiCostLineItem } from "@/lib/domain/report/schema";
 
 export interface ReportGenerator {
   readonly id: string;
@@ -7,4 +8,5 @@ export interface ReportGenerator {
    * Consumers can render each section the moment it arrives.
    */
   generateStream(transcript: string): AsyncGenerator<ReportSection>;
+  getCostLineItems?(): ApiCostLineItem[];
 }

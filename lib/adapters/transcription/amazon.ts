@@ -5,7 +5,12 @@ import {
   GetTranscriptionJobCommand,
 } from "@aws-sdk/client-transcribe";
 import { env } from "@/lib/config/env";
-import type { TranscriptionProvider, TranscriptionResult } from "./provider";
+import { PRICING_SNAPSHOT, priceAudioSeconds } from "@/lib/domain/report/api-cost";
+import type {
+  TranscriptionOptions,
+  TranscriptionProvider,
+  TranscriptionResult,
+} from "./provider";
 
 export class AmazonTranscriptionProvider implements TranscriptionProvider {
   readonly id = "amazon" as const;
@@ -36,6 +41,7 @@ export class AmazonTranscriptionProvider implements TranscriptionProvider {
   async transcribeBatch(
     audio: Uint8Array,
     mimeType: string,
+    options: TranscriptionOptions = {},
   ): Promise<TranscriptionResult> {
     const jobName = `scribe-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const ext =
@@ -73,6 +79,7 @@ export class AmazonTranscriptionProvider implements TranscriptionProvider {
     return {
       text: data.results.transcripts[0]?.transcript ?? "",
       detectedLanguage: result.LanguageCode,
+      costLineItem: amazonCost(options),
     };
   }
 
@@ -93,4 +100,19 @@ export class AmazonTranscriptionProvider implements TranscriptionProvider {
       await new Promise((r) => setTimeout(r, 2000));
     }
   }
+}
+
+function amazonCost(options: TranscriptionOptions) {
+  if (options.audioSeconds === undefined) return undefined;
+  const pricing = PRICING_SNAPSHOT.amazon["aws-transcribe-standard"];
+  return priceAudioSeconds({
+    stage: "transcription",
+    provider: "amazon",
+    model: "aws-transcribe-standard",
+    label: options.label ?? "Transcript",
+    audioSeconds: options.audioSeconds,
+    currency: pricing.currency,
+    pricePerHour: pricing.pricePerHour,
+    accuracy: "estimated",
+  });
 }

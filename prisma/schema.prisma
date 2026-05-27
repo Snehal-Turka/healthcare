@@ -17,6 +17,7 @@ model Report {
   freeVisitDeadline  DateTime?
   medicineExpiryDate DateTime?
   stageTimings       String    @default("{}") // JSON-serialized StageTimings
+  apiCost            String    @default("{}") // JSON-serialized ApiCost
   error              String?
   createdAt          DateTime  @default(now())
   generatedAt        DateTime?

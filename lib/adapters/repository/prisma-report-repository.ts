@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import type {
+  ApiCost,
   ProviderId,
   ReportContent,
   ReportStatus,
@@ -22,6 +23,7 @@ type Row = {
   freeVisitDeadline: Date | null;
   medicineExpiryDate: Date | null;
   stageTimings: string;
+  apiCost?: string | null;
   error: string | null;
   createdAt: Date;
   generatedAt: Date | null;
@@ -77,6 +79,7 @@ function toRecord(row: Row): ReportRecord {
       ? row.medicineExpiryDate.toISOString()
       : null,
     stageTimings: JSON.parse(row.stageTimings) as StageTimings,
+    apiCost: parseApiCost(row.apiCost),
     error: row.error,
     createdAt: row.createdAt.toISOString(),
     generatedAt: row.generatedAt ? row.generatedAt.toISOString() : null,
@@ -103,8 +106,20 @@ function toData(patch: Partial<ReportRecord>) {
       : null;
   if (patch.stageTimings !== undefined)
     data.stageTimings = JSON.stringify(patch.stageTimings);
+  if (patch.apiCost !== undefined)
+    data.apiCost = patch.apiCost ? JSON.stringify(patch.apiCost) : "{}";
   if (patch.error !== undefined) data.error = patch.error;
   if (patch.generatedAt !== undefined)
     data.generatedAt = patch.generatedAt ? new Date(patch.generatedAt) : null;
   return data;
+}
+
+export function parseApiCost(raw: string | null | undefined): ApiCost | null {
+  if (!raw || raw === "undefined") return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<ApiCost>;
+    return Array.isArray(parsed.lineItems) ? (parsed as ApiCost) : null;
+  } catch {
+    return null;
+  }
 }

@@ -10,6 +10,7 @@ export class LocalStorage implements Storage {
     data: Uint8Array,
     _contentType: string,
   ): Promise<string> {
+    void _contentType;
     const filePath = join(this.baseDir, key);
     await mkdir(dirname(filePath), { recursive: true });
     await writeFile(filePath, data);

@@ -21,6 +21,7 @@ export class MemoryReportRepository implements ReportRepository {
       freeVisitDeadline: null,
       medicineExpiryDate: null,
       stageTimings: {},
+      apiCost: null,
       error: null,
       createdAt: now,
       generatedAt: null,

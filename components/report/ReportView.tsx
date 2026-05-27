@@ -9,6 +9,7 @@ import { NextMeeting } from "./NextMeeting";
 import { Deadlines } from "./Deadlines";
 import { ReportActions } from "./ReportActions";
 import { Timings } from "./Timings";
+import { ApiCost } from "./ApiCost";
 
 function Section({
   title,
@@ -48,6 +49,7 @@ function ReportEditor({ report }: { report: ReportRecord }) {
         medicineExpiryDate={report.medicineExpiryDate}
       />
       <Timings timings={report.stageTimings} />
+      <ApiCost cost={report.apiCost} />
       <Section title="Risk / Safety Flags">
         <RiskFlags flags={content.riskFlags} />
       </Section>

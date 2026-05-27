@@ -1,4 +1,8 @@
-import type { ReportContent, ReportSection } from "@/lib/domain/report/schema";
+import type {
+  ApiCostLineItem,
+  ReportContent,
+  ReportSection,
+} from "@/lib/domain/report/schema";
 import type { ReportGenerator } from "./generator";
 
 export class FakeReportGenerator implements ReportGenerator {
@@ -19,6 +23,7 @@ export class FakeReportGenerator implements ReportGenerator {
       ],
       nextMeeting: { agenda: "Review medication response", suggestedAt: null },
     },
+    private readonly costLineItems: ApiCostLineItem[] = [],
   ) {}
 
   async *generateStream(transcript: string): AsyncGenerator<ReportSection> {
@@ -27,5 +32,9 @@ export class FakeReportGenerator implements ReportGenerator {
     yield { section: "summary", data: this.content.summary };
     yield { section: "medications", data: this.content.medications };
     yield { section: "nextMeeting", data: this.content.nextMeeting };
+  }
+
+  getCostLineItems(): ApiCostLineItem[] {
+    return this.costLineItems;
   }
 }

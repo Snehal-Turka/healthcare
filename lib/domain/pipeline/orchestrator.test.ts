@@ -130,4 +130,89 @@ describe("runReportPipeline", () => {
     >;
     expect(final.report.stageTimings.transcribeMs).toBe(0);
   });
+
+  it("stores mpeg recordings with an mp3 extension", async () => {
+    const events = await collect(
+      runReportPipeline(
+        {
+          audio: new Uint8Array([1]),
+          mimeType: "audio/mpeg",
+          providerId: "openai",
+          transcript: "already transcribed",
+        },
+        deps(),
+      ),
+    );
+
+    const final = events.find((e) => e.type === "report") as Extract<
+      PipelineEvent,
+      { type: "report" }
+    >;
+    expect(final.report.audioRef).toMatch(/\.mp3$/);
+  });
+
+  it("reuses a live session report and preserves server-recorded chunk costs", async () => {
+    const repo = new MemoryReportRepository();
+    const session = await repo.create({
+      providerId: "sarvam",
+      audioRef: "pending:live",
+    });
+    await repo.update(session.id, {
+      apiCost: {
+        totals: [{ currency: "INR", amount: 0.241667 }],
+        accuracy: "estimated",
+        lineItems: [
+          {
+            stage: "transcription",
+            provider: "sarvam",
+            model: "saaras:v3",
+            label: "Live transcript chunk",
+            accuracy: "estimated",
+            units: { audioSeconds: 29 },
+            cost: { currency: "INR", amount: 0.241667 },
+          },
+        ],
+        computedAt: "2026-05-25T08:59:30.000Z",
+      },
+    });
+
+    const events = await collect(
+      runReportPipeline(
+        {
+          audio: new Uint8Array([1, 2, 3]),
+          mimeType: "audio/webm",
+          providerId: "sarvam",
+          transcript: "live transcript",
+          reportId: session.id,
+        },
+        {
+          ...deps(repo),
+          generator: new FakeReportGenerator(undefined, [
+            {
+              stage: "report_generation",
+              provider: "openai",
+              model: "gpt-5.4",
+              label: "Report generation",
+              accuracy: "exact",
+              units: { inputTokens: 1000, outputTokens: 100 },
+              cost: { currency: "USD", amount: 0.004 },
+            },
+          ]),
+        },
+      ),
+    );
+
+    const final = events.find((e) => e.type === "report") as Extract<
+      PipelineEvent,
+      { type: "report" }
+    >;
+    expect(final.report.id).toBe(session.id);
+    expect(final.report.audioRef).not.toBe("pending:live");
+    expect(final.report.apiCost?.totals).toEqual([
+      { currency: "INR", amount: 0.241667 },
+      { currency: "USD", amount: 0.004 },
+    ]);
+    expect(final.report.apiCost?.accuracy).toBe("mixed");
+    expect(final.report.apiCost?.lineItems).toHaveLength(2);
+  });
 });

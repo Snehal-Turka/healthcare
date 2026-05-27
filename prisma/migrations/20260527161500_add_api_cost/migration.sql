@@ -1,0 +1,1 @@
+ALTER TABLE "Report" ADD COLUMN "apiCost" TEXT NOT NULL DEFAULT '{}';

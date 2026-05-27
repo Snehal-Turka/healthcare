@@ -1,4 +1,5 @@
 import type {
+  ApiCost,
   ProviderId,
   ReportContent,
   ReportStatus,
@@ -16,6 +17,7 @@ export type ReportRecord = {
   freeVisitDeadline: string | null;
   medicineExpiryDate: string | null;
   stageTimings: StageTimings;
+  apiCost: ApiCost | null;
   error: string | null;
   createdAt: string;
   generatedAt: string | null;

@@ -27,6 +27,17 @@ export async function POST(req: Request): Promise<Response> {
     typeof transcriptField === "string" && transcriptField.trim().length > 0
       ? transcriptField
       : undefined;
+  const reportIdField = form.get("reportId");
+  const reportId =
+    typeof reportIdField === "string" && reportIdField.trim().length > 0
+      ? reportIdField
+      : undefined;
+  const audioSecondsField = form.get("audioSeconds");
+  const audioSeconds =
+    typeof audioSecondsField === "string" &&
+    Number.isFinite(Number(audioSecondsField))
+      ? Number(audioSecondsField)
+      : undefined;
   const deps = productionDeps();
   const encoder = new TextEncoder();
 
@@ -34,7 +45,7 @@ export async function POST(req: Request): Promise<Response> {
     async start(controller) {
       try {
         for await (const event of runReportPipeline(
-          { audio, mimeType, providerId, transcript },
+          { audio, mimeType, providerId, transcript, reportId, audioSeconds },
           deps,
         )) {
           controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));

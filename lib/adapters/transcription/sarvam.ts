@@ -1,6 +1,11 @@
 import { SarvamAIClient } from "sarvamai";
 import { env } from "@/lib/config/env";
-import type { TranscriptionProvider, TranscriptionResult } from "./provider";
+import { PRICING_SNAPSHOT, priceAudioSeconds } from "@/lib/domain/report/api-cost";
+import type {
+  TranscriptionOptions,
+  TranscriptionProvider,
+  TranscriptionResult,
+} from "./provider";
 
 type SpeechClient = Pick<SarvamAIClient, "speechToText" | "speechToTextJob">;
 
@@ -44,6 +49,7 @@ export class SarvamTranscriptionProvider implements TranscriptionProvider {
   async transcribeChunk(
     audio: Uint8Array,
     mimeType: string,
+    options: TranscriptionOptions = {},
   ): Promise<TranscriptionResult> {
     const res = await this.client.speechToText.transcribe({
       file: {
@@ -55,7 +61,11 @@ export class SarvamTranscriptionProvider implements TranscriptionProvider {
       mode: "transcribe",
       language_code: "unknown",
     });
-    return { text: res.transcript, detectedLanguage: res.language_code };
+    return {
+      text: res.transcript,
+      detectedLanguage: res.language_code,
+      costLineItem: sarvamCost(options, "Live transcript chunk"),
+    };
   }
 
   /**
@@ -67,6 +77,7 @@ export class SarvamTranscriptionProvider implements TranscriptionProvider {
   async transcribeBatch(
     audio: Uint8Array,
     mimeType: string,
+    options: TranscriptionOptions = {},
   ): Promise<TranscriptionResult> {
     const jobs = this.client.speechToTextJob;
     const fileName = fileNameFor(mimeType);
@@ -129,6 +140,7 @@ export class SarvamTranscriptionProvider implements TranscriptionProvider {
     return {
       text: output.transcript ?? "",
       detectedLanguage: output.language_code,
+      costLineItem: sarvamCost(options, "Transcript"),
     };
   }
 
@@ -147,4 +159,22 @@ export class SarvamTranscriptionProvider implements TranscriptionProvider {
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
     }
   }
+}
+
+function sarvamCost(
+  options: TranscriptionOptions,
+  fallbackLabel: string,
+) {
+  if (options.audioSeconds === undefined) return undefined;
+  const pricing = PRICING_SNAPSHOT.sarvam["saaras:v3"];
+  return priceAudioSeconds({
+    stage: "transcription",
+    provider: "sarvam",
+    model: "saaras:v3",
+    label: options.label ?? fallbackLabel,
+    audioSeconds: options.audioSeconds,
+    currency: pricing.currency,
+    pricePerHour: pricing.pricePerHour,
+    accuracy: "estimated",
+  });
 }

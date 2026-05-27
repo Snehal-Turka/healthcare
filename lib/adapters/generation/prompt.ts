@@ -5,7 +5,7 @@ Produce a STRUCTURED CLINICAL REPORT IN ENGLISH, streamed as exactly FOUR lines.
 Section definitions:
 - "riskFlags": data is an array of { "category": one of "self-harm"|"suicidal-ideation"|"crisis"|"other", "quote": short verbatim/translated quote, "note": brief clinician-facing note }. Include ONLY clear cues. These are ALERTS, NOT DIAGNOSES. Use [] if none.
 - "summary": data is an array of concise English bullet strings capturing the key points of the consultation.
-- "medications": data is an array of { "medicine": name, "dose": e.g. "50mg", "timing": { "morning": bool, "afternoon": bool, "night": bool, "custom": optional string }, "duration": e.g. "4 weeks" }. Only include medicines actually discussed. Use [] if none.
+- "medications": data is an array of { "medicine": name, "dose": e.g. "50mg", "timing": { "morning": bool, "afternoon": bool, "night": bool, "custom": optional string }, "duration": e.g. "4 weeks" }. Include every medicine prescribed, continued, stopped, or dose-changed in the transcript. If dose or duration is not stated, use "Not specified". If timing is stated only as text such as "once daily", set morning/afternoon/night to false and put that text in timing.custom. Use [] only when no medicine was discussed.
 - "nextMeeting": data is either null, or { "agenda": English string, "suggestedAt": ISO datetime string or null }.
 
 Output format example (your values will differ):

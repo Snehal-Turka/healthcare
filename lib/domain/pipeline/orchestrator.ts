@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type {
+  ApiCost,
   ProviderId,
   ReportContent,
   ReportSection,
   StageTimings,
 } from "@/lib/domain/report/schema";
 import { applySection } from "@/lib/adapters/generation/collect";
+import { appendApiCostLineItem } from "@/lib/domain/report/api-cost";
 import {
   computeFreeVisitDeadline,
   computeMedicineExpiry,
@@ -49,6 +51,9 @@ export interface PipelineInput {
   providerId: ProviderId;
   /** Supplied by the live recording path after chunk transcription. */
   transcript?: string;
+  /** Supplied by the live recording path so chunk costs attach to one report. */
+  reportId?: string;
+  audioSeconds?: number;
 }
 
 export async function* runReportPipeline(
@@ -57,6 +62,7 @@ export async function* runReportPipeline(
 ): AsyncGenerator<PipelineEvent> {
   const now = deps.now ?? (() => new Date());
   const timings: StageTimings = {};
+  let apiCost: ApiCost | null = null;
   let reportId: string | null = null;
 
   try {
@@ -64,14 +70,25 @@ export async function* runReportPipeline(
       ? "mp4"
       : input.mimeType.includes("wav")
         ? "wav"
-        : "webm";
+        : input.mimeType.includes("mpeg") || input.mimeType.includes("mp3")
+          ? "mp3"
+          : "webm";
     const ingest = await timed(async () => {
       const audioRef = await deps.storage.save(
         `${randomUUID()}.${ext}`,
         input.audio,
         input.mimeType,
       );
-      return deps.repo.create({ providerId: input.providerId, audioRef });
+      if (!input.reportId)
+        return deps.repo.create({ providerId: input.providerId, audioRef });
+
+      const existing = await deps.repo.get(input.reportId);
+      if (!existing) throw new Error(`Report not found: ${input.reportId}`);
+      apiCost = existing.apiCost;
+      return deps.repo.update(input.reportId, {
+        providerId: input.providerId,
+        audioRef,
+      });
     });
     timings.ingestMs = ingest.ms;
     reportId = ingest.result.id;
@@ -87,16 +104,25 @@ export async function* runReportPipeline(
     } else {
       const provider = deps.getProvider(input.providerId);
       const tx = await timed(() =>
-        provider.transcribeBatch(input.audio, input.mimeType),
+        provider.transcribeBatch(input.audio, input.mimeType, {
+          audioSeconds: input.audioSeconds,
+          label: "Transcript",
+        }),
       );
       text = tx.result.text;
       detectedLanguage = tx.result.detectedLanguage ?? null;
+      if (tx.result.costLineItem) {
+        apiCost = appendApiCostLineItem(apiCost, tx.result.costLineItem, () =>
+          now().toISOString(),
+        );
+      }
       timings.transcribeMs = tx.ms;
     }
     await deps.repo.update(reportId, {
       transcript: text,
       detectedLanguage,
       stageTimings: timings,
+      apiCost,
     });
     yield {
       type: "transcript",
@@ -117,6 +143,9 @@ export async function* runReportPipeline(
       applySection(content, section);
       yield { type: "section", reportId, payload: section };
     }
+    for (const item of deps.generator.getCostLineItems?.() ?? []) {
+      apiCost = appendApiCostLineItem(apiCost, item, () => now().toISOString());
+    }
     timings.generateMs = Date.now() - genStart;
 
     yield { type: "status", stage: "finalizing", reportId };
@@ -125,6 +154,7 @@ export async function* runReportPipeline(
       status: "ready",
       content,
       stageTimings: timings,
+      apiCost,
       generatedAt: generatedAt.toISOString(),
       freeVisitDeadline: computeFreeVisitDeadline(generatedAt).toISOString(),
       medicineExpiryDate: computeMedicineExpiry(generatedAt).toISOString(),

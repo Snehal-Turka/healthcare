@@ -63,6 +63,29 @@ describe("OpenAIReportGenerator", () => {
     expect(sections).toHaveLength(4);
   });
 
+  it("repairs once when the first output is missing a required section", async () => {
+    const missingMedications = [
+      JSON.stringify({ section: "riskFlags", data: [] }),
+      JSON.stringify({ section: "summary", data: ["ok"] }),
+      JSON.stringify({ section: "nextMeeting", data: null }),
+    ].join("\n");
+    const gen = new OpenAIReportGenerator(
+      stubClient([missingMedications, validNdjson]),
+    );
+
+    const sections = await drain(gen.generateStream("some transcript"));
+
+    expect(sections.map((s) => s.section)).toEqual([
+      "riskFlags",
+      "summary",
+      "nextMeeting",
+      "riskFlags",
+      "summary",
+      "medications",
+      "nextMeeting",
+    ]);
+  });
+
   it("throws when no sections parse even after repair", async () => {
     const gen = new OpenAIReportGenerator(stubClient(["nope", "still nope"]));
     await expect(drain(gen.generateStream("t"))).rejects.toThrow();

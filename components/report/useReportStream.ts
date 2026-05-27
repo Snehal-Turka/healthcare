@@ -19,6 +19,8 @@ type SubmitArgs = [
   providerId: ProviderId,
   filename?: string,
   transcript?: string,
+  reportId?: string,
+  audioSeconds?: number,
 ];
 
 export function useReportStream() {
@@ -35,8 +37,17 @@ export function useReportStream() {
       providerId: ProviderId,
       filename = "consult.webm",
       transcript?: string,
+      reportId?: string,
+      audioSeconds?: number,
     ) => {
-      lastArgs.current = [audio, providerId, filename, transcript];
+      lastArgs.current = [
+        audio,
+        providerId,
+        filename,
+        transcript,
+        reportId,
+        audioSeconds,
+      ];
       setStage("ingesting");
       setTranscript("");
       setReport(null);
@@ -47,6 +58,9 @@ export function useReportStream() {
       form.append("audio", audio, filename);
       form.append("providerId", providerId);
       if (transcript) form.append("transcript", transcript);
+      if (reportId) form.append("reportId", reportId);
+      if (audioSeconds !== undefined)
+        form.append("audioSeconds", String(audioSeconds));
 
       const res = await fetch("/api/reports", { method: "POST", body: form });
       if (!res.ok || !res.body) {

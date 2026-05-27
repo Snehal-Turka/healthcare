@@ -87,3 +87,34 @@ export type StageTimings = {
   transcribeMs?: number;
   generateMs?: number;
 };
+
+export type ApiCostStage = "transcription" | "report_generation";
+export type ApiCostAccuracy = "exact" | "estimated" | "mixed";
+export type ApiCostCurrency = "USD" | "INR";
+
+export type ApiCostLineItem = {
+  stage: ApiCostStage;
+  provider: ProviderId | "openai";
+  model: string;
+  label: string;
+  accuracy: Exclude<ApiCostAccuracy, "mixed">;
+  units: {
+    inputTokens?: number;
+    outputTokens?: number;
+    cachedInputTokens?: number;
+    totalTokens?: number;
+    audioSeconds?: number;
+    requests?: number;
+  };
+  cost: {
+    currency: ApiCostCurrency;
+    amount: number;
+  };
+};
+
+export type ApiCost = {
+  totals: { currency: ApiCostCurrency; amount: number }[];
+  accuracy: ApiCostAccuracy;
+  lineItems: ApiCostLineItem[];
+  computedAt: string;
+};

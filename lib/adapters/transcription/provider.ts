@@ -1,9 +1,16 @@
 import type { ProviderId } from "@/lib/domain/report/schema";
+import type { ApiCostLineItem } from "@/lib/domain/report/schema";
 
 export interface TranscriptionResult {
   text: string;
   detectedLanguage?: string;
+  costLineItem?: ApiCostLineItem;
 }
+
+export type TranscriptionOptions = {
+  audioSeconds?: number;
+  label?: string;
+};
 
 export interface TranscriptionProvider {
   readonly id: ProviderId;
@@ -11,6 +18,7 @@ export interface TranscriptionProvider {
   transcribeBatch(
     audio: Uint8Array,
     mimeType: string,
+    options?: TranscriptionOptions,
   ): Promise<TranscriptionResult>;
   /**
    * Low-latency transcription of a short (<=30s) live segment. Providers whose
@@ -21,6 +29,7 @@ export interface TranscriptionProvider {
   transcribeChunk?(
     audio: Uint8Array,
     mimeType: string,
+    options?: TranscriptionOptions,
   ): Promise<TranscriptionResult>;
   transcribeStream?(
     chunks: AsyncIterable<Uint8Array>,

@@ -473,6 +473,29 @@ textarea:focus-visible {
   font-weight: 800;
 }
 
+.api-cost-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.api-cost-total,
+.api-cost-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 254, 250, 0.72);
+  padding: 6px 10px;
+}
+
+.api-cost-total {
+  border-color: rgba(35, 105, 163, 0.24);
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 800;
+}
+
 .report-section {
   padding: 18px;
 }

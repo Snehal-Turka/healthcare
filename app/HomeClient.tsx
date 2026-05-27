@@ -24,8 +24,8 @@ export default function HomeClient({
       stage === "finalizing" ||
       Object.keys(partial).length > 0);
 
-  const onSubmit = (file: File, providerId: ProviderId) =>
-    submit(file, providerId, file.name);
+  const onSubmit = async (file: File, providerId: ProviderId) =>
+    submit(file, providerId, file.name, undefined, undefined, await durationSeconds(file));
 
   return (
     <main className="clinical-shell clinical-flow">
@@ -53,12 +53,14 @@ export default function HomeClient({
         <Recorder
           providerId={providerId}
           disabled={busy}
-          onComplete={(audio, liveTranscript, mimeType) =>
+          onComplete={(audio, liveTranscript, mimeType, reportId, durationMs) =>
             submit(
               audio,
               providerId,
               `consult.${mimeType.includes("webm") ? "webm" : "audio"}`,
               liveTranscript,
+              reportId,
+              durationMs / 1000,
             )
           }
         />
@@ -90,4 +92,22 @@ export default function HomeClient({
       {report && <ReportView report={report} />}
     </main>
   );
+}
+
+async function durationSeconds(file: File): Promise<number | undefined> {
+  const url = URL.createObjectURL(file);
+  try {
+    const audio = document.createElement("audio");
+    audio.preload = "metadata";
+    audio.src = url;
+    await new Promise<void>((resolve, reject) => {
+      audio.onloadedmetadata = () => resolve();
+      audio.onerror = () => reject(new Error("Could not read audio duration"));
+    });
+    return Number.isFinite(audio.duration) ? audio.duration : undefined;
+  } catch {
+    return undefined;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

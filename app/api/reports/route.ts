@@ -79,7 +79,7 @@ export async function GET(): Promise<Response> {
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "10mb",
+      sizeLimit: "4.5mb",
     },
   },
 };

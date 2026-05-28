@@ -26,9 +26,9 @@ export function UploadPanel({
           const file = e.target.files?.[0];
           if (!file) return;
 
-          const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+          const MAX_SIZE = 4.5 * 1024 * 1024; // 4.5 MB
           if (file.size > MAX_SIZE) {
-            setError("File size exceeds 10 MB limit.");
+            setError("File size exceeds 4.5 MB limit.");
             if (inputRef.current) {
               inputRef.current.value = "";
             }
@@ -48,7 +48,7 @@ export function UploadPanel({
         }
       />
       <p className="capture-zone-hint">
-        Supported formats: MP3, WAV, M4A, WebM, OGG (Max 10 MB)
+        Supported formats: MP3, WAV, M4A, WebM, OGG (Max 4.5 MB)
       </p>
       {error && (
         <p className="error-note" style={{ marginTop: 10 }}>

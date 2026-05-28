@@ -6,10 +6,10 @@ const EnvSchema = z.object({
   STORAGE_DIR: z.string().default(".data/audio"),
   OPENAI_API_KEY: z.string().optional(),
   SARVAM_API_KEY: z.string().optional(),
-  AWS_REGION: z.string().optional(),
-  AWS_S3_BUCKET: z.string().optional(),
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  HC_AWS_REGION: z.string().optional(),
+  HC_AWS_S3_BUCKET: z.string().optional(),
+  HC_AWS_ACCESS_KEY_ID: z.string().optional(),
+  HC_AWS_SECRET_ACCESS_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

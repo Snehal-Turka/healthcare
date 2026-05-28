@@ -5,7 +5,10 @@ import {
   GetTranscriptionJobCommand,
 } from "@aws-sdk/client-transcribe";
 import { env } from "@/lib/config/env";
-import { PRICING_SNAPSHOT, priceAudioSeconds } from "@/lib/domain/report/api-cost";
+import {
+  PRICING_SNAPSHOT,
+  priceAudioSeconds,
+} from "@/lib/domain/report/api-cost";
 import type {
   TranscriptionOptions,
   TranscriptionProvider,
@@ -19,14 +22,14 @@ export class AmazonTranscriptionProvider implements TranscriptionProvider {
   private readonly transcribe: TranscribeClient;
 
   constructor(
-    private readonly region = env().AWS_REGION,
-    private readonly bucket = env().AWS_S3_BUCKET,
-    private readonly accessKeyId = env().AWS_ACCESS_KEY_ID,
-    private readonly secretAccessKey = env().AWS_SECRET_ACCESS_KEY,
+    private readonly region = env().HC_AWS_REGION,
+    private readonly bucket = env().HC_AWS_S3_BUCKET,
+    private readonly accessKeyId = env().HC_AWS_ACCESS_KEY_ID,
+    private readonly secretAccessKey = env().HC_AWS_SECRET_ACCESS_KEY,
   ) {
     if (!region || !bucket || !accessKeyId || !secretAccessKey)
       throw new Error(
-        "AWS_REGION, AWS_S3_BUCKET, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY are required for Amazon Transcribe",
+        "HC_AWS_REGION, HC_AWS_S3_BUCKET, HC_AWS_ACCESS_KEY_ID, and HC_AWS_SECRET_ACCESS_KEY are required for Amazon Transcribe",
       );
     this.s3 = new S3Client({
       region,

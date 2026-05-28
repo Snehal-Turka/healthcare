@@ -9,6 +9,7 @@
 **Tech Stack:** TypeScript, Vitest, Zod, Prisma 7 + SQLite (via `@prisma/adapter-better-sqlite3`). Import alias `@/*` → repo root. Package manager: yarn.
 
 > **Prisma 7 migration notes (deviations from original plan):**
+>
 > - `datasource.url` in `schema.prisma` is no longer supported — moved to `prisma.config.ts` using `defineConfig`/`env` from `prisma/config`.
 > - `PrismaClient` constructor no longer accepts `datasources` — use a driver adapter (`PrismaBetterSqlite3` from `@prisma/adapter-better-sqlite3`).
 > - `prisma db push --skip-generate` flag removed — use `--url` to override the datasource URL.
@@ -361,10 +362,10 @@ const EnvSchema = z.object({
   STORAGE_DIR: z.string().default(".data/audio"),
   OPENAI_API_KEY: z.string().optional(),
   SARVAM_API_KEY: z.string().optional(),
-  AWS_REGION: z.string().optional(),
-  AWS_S3_BUCKET: z.string().optional(),
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  HC_AWS_REGION: z.string().optional(),
+  HC_AWS_S3_BUCKET: z.string().optional(),
+  HC_AWS_ACCESS_KEY_ID: z.string().optional(),
+  HC_AWS_SECRET_ACCESS_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -385,10 +386,10 @@ DEFAULT_PROVIDER="openai"     # openai | sarvam | amazon
 STORAGE_DIR=".data/audio"
 OPENAI_API_KEY=""
 SARVAM_API_KEY=""
-AWS_REGION="ap-south-1"       # Mumbai
-AWS_S3_BUCKET=""
-AWS_ACCESS_KEY_ID=""
-AWS_SECRET_ACCESS_KEY=""
+HC_AWS_REGION="ap-south-1"       # Mumbai
+HC_AWS_S3_BUCKET=""
+HC_AWS_ACCESS_KEY_ID=""
+HC_AWS_SECRET_ACCESS_KEY=""
 ```
 
 - [ ] **Step 5: Run the test to confirm it passes**

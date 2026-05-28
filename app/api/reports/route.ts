@@ -75,3 +75,11 @@ export async function GET(): Promise<Response> {
   const repo = new PrismaReportRepository(prisma);
   return Response.json(await repo.list());
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};

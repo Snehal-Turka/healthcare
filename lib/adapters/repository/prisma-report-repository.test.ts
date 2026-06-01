@@ -1,32 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { execSync } from "node:child_process";
-import { rm } from "node:fs/promises";
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import {
   parseApiCost,
   PrismaReportRepository,
 } from "@/lib/adapters/repository/prisma-report-repository";
 
-const url = "file:./test-repo.db";
+const url = process.env.TEST_DATABASE_URL;
+const describeWithDatabase = url ? describe : describe.skip;
 let prisma: PrismaClient;
 let repo: PrismaReportRepository;
-
-beforeAll(() => {
-  execSync(`npx prisma db push --url "${url}"`, {
-    env: { ...process.env, RUST_LOG: "debug" },
-    stdio: "ignore",
-  });
-  const adapter = new PrismaBetterSqlite3({ url });
-  prisma = new PrismaClient({ adapter });
-  repo = new PrismaReportRepository(prisma);
-});
-
-afterAll(async () => {
-  await prisma?.$disconnect();
-  await rm("./test-repo.db", { force: true });
-  await rm("./test-repo.db-journal", { force: true });
-});
+const createdIds: string[] = [];
 
 describe("PrismaReportRepository", () => {
   it("treats missing legacy api cost values as not recorded", () => {
@@ -35,12 +20,33 @@ describe("PrismaReportRepository", () => {
     expect(parseApiCost("undefined")).toBeNull();
     expect(parseApiCost("{}")).toBeNull();
   });
+});
+
+describeWithDatabase("PrismaReportRepository with Postgres", () => {
+  beforeAll(async () => {
+    const databaseUrl = url as string;
+    execSync("npx prisma migrate deploy", {
+      env: { ...process.env, DATABASE_URL: databaseUrl, DIRECT_URL: databaseUrl },
+      stdio: "ignore",
+    });
+    const adapter = new PrismaNeon({ connectionString: databaseUrl });
+    prisma = new PrismaClient({ adapter });
+    repo = new PrismaReportRepository(prisma);
+  });
+
+  afterAll(async () => {
+    if (createdIds.length > 0) {
+      await prisma?.report.deleteMany({ where: { id: { in: createdIds } } });
+    }
+    await prisma?.$disconnect();
+  });
 
   it("creates, updates, gets, and lists", async () => {
     const created = await repo.create({
       providerId: "openai",
-      audioRef: "local:.data/x.webm",
+      audioRef: `test:${crypto.randomUUID()}.webm`,
     });
+    createdIds.push(created.id);
     expect(created.status).toBe("processing");
     expect(created.content).toBeNull();
 
@@ -85,6 +91,6 @@ describe("PrismaReportRepository", () => {
     expect(fetched?.apiCost?.lineItems[0].model).toBe("gpt-5.4");
 
     const all = await repo.list();
-    expect(all.length).toBe(1);
+    expect(all.some((report) => report.id === created.id)).toBe(true);
   });
 });

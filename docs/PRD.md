@@ -148,21 +148,21 @@ Built the way a senior engineer would: **modular, clean, efficient, and ready to
   - **UI** (React): presentational components + hooks for streaming status/report. No business logic.
 - **Single responsibility & small files.** Each module answers: what it does, how to use it, what it depends on. Large files are a smell to split.
 - **Configuration & secrets:** one typed config module; all provider keys in env, never client-side.
-- **Scale path designed-in, not built:** stateless handlers; storage abstraction (local dir → S3); DB abstraction (SQLite → Postgres via same Prisma schema); pipeline extractable to a queue/worker. None of this adds MVP work — it's about _where the seams are_.
+- **Scale path designed-in, not built:** stateless handlers; storage abstraction (local dir → S3); Neon Postgres via Prisma; pipeline extractable to a queue/worker. None of this adds MVP work — it's about _where the seams are_.
 - **Observability:** per-stage timing + structured logs so the §4 latency budget is measurable from day one.
 - **Resilience:** typed error handling and retries at adapter boundaries; provider failure never crashes the request.
 - **Testing:** unit tests for core + adapters (via fakes); the swappable interfaces make this cheap.
 
-## 12. Data Model (Prisma + SQLite)
+## 12. Data Model (Prisma + Neon Postgres)
 
 - **Report**: `id`, `createdAt`, `generatedAt`, `status` (processing | ready | failed), `providerId`, `audioRef`, `detectedLanguage`, `transcript`, `report` (JSON: summary, medications, nextMeeting, riskFlags), `freeVisitDeadline`, `medicineExpiryDate`, `stageTimings` (ingest/transcribe/generate ms).
 - Audio files stored via a small **storage abstraction** (local data dir for dev; S3-compatible for deploy). Audio is retained to enable future re-transcription / A/B comparison.
-- SQLite for local dev; same Prisma schema points at Postgres for deployment.
+- Neon Postgres is the application database in local and deployed environments.
 
 ## 13. Tech Stack
 
 - **Next.js 16 (App Router) + React 19 + Tailwind v4** (existing scaffold).
-- **Prisma + SQLite** (→ Postgres for deploy).
+- **Prisma + Neon Postgres**.
 - **OpenAI SDK** (streamed report generation; also OpenAI STT provider).
 - **Sarvam AI** + **AWS Transcribe** SDKs for the other STT providers.
 - In-browser recording via **MediaRecorder API** (Opus/16 kHz mono), chunked uploads, **presigned direct-to-storage** upload.

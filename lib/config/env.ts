@@ -1,7 +1,17 @@
 import { z } from "zod";
 
+const PostgresUrl = z
+  .string()
+  .min(1)
+  .refine(
+    (value) =>
+      value.startsWith("postgres://") || value.startsWith("postgresql://"),
+    "Must be a Postgres connection string.",
+  );
+
 const EnvSchema = z.object({
-  DATABASE_URL: z.string().min(1),
+  DATABASE_URL: PostgresUrl,
+  DIRECT_URL: PostgresUrl.optional(),
   DEFAULT_PROVIDER: z.enum(["openai", "sarvam", "amazon"]).default("openai"),
   STORAGE_DIR: z.string().default(".data/audio"),
   OPENAI_API_KEY: z.string().optional(),

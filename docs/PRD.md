@@ -156,7 +156,7 @@ Built the way a senior engineer would: **modular, clean, efficient, and ready to
 ## 12. Data Model (Prisma + Neon Postgres)
 
 - **Report**: `id`, `createdAt`, `generatedAt`, `status` (processing | ready | failed), `providerId`, `audioRef`, `detectedLanguage`, `transcript`, `report` (JSON: summary, medications, nextMeeting, riskFlags), `freeVisitDeadline`, `medicineExpiryDate`, `stageTimings` (ingest/transcribe/generate ms).
-- Audio files stored via a small **storage abstraction** (local data dir for dev; S3-compatible for deploy). Audio is retained to enable future re-transcription / A/B comparison.
+- Audio files pass through a small **storage abstraction**. For the current MVP, audio is discarded after ingest by default to avoid filesystem growth; local retention can be enabled for debugging or future re-transcription / A/B comparison.
 - Neon Postgres is the application database in local and deployed environments.
 
 ## 13. Tech Stack

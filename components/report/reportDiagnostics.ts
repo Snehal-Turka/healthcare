@@ -41,7 +41,7 @@ type CostLog = {
   }[];
 };
 
-const USD_TO_INR_RATE = 83; // Replace with an API-fetched rate when needed.
+const USD_TO_INR_RATE = 95.16; // Replace with an API-fetched rate when needed.
 
 export function logReportDiagnostics(report: ReportRecord) {
   console.log(

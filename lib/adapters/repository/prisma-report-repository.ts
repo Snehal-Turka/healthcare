@@ -19,6 +19,7 @@ type Row = {
   audioRef: string;
   detectedLanguage: string | null;
   transcript: string | null;
+  audioSeconds: number | null;
   content: string | null;
   freeVisitDeadline: Date | null;
   medicineExpiryDate: Date | null;
@@ -34,7 +35,11 @@ export class PrismaReportRepository implements ReportRepository {
 
   async create(input: CreateReportInput): Promise<ReportRecord> {
     const row = await this.prisma.report.create({
-      data: { providerId: input.providerId, audioRef: input.audioRef },
+      data: {
+        providerId: input.providerId,
+        audioRef: input.audioRef,
+        audioSeconds: input.audioSeconds ?? null,
+      },
     });
     return toRecord(row as Row);
   }
@@ -71,6 +76,7 @@ function toRecord(row: Row): ReportRecord {
     audioRef: row.audioRef,
     detectedLanguage: row.detectedLanguage,
     transcript: row.transcript,
+    audioSeconds: row.audioSeconds,
     content: row.content ? (JSON.parse(row.content) as ReportContent) : null,
     freeVisitDeadline: row.freeVisitDeadline
       ? row.freeVisitDeadline.toISOString()
@@ -94,6 +100,7 @@ function toData(patch: Partial<ReportRecord>) {
   if (patch.detectedLanguage !== undefined)
     data.detectedLanguage = patch.detectedLanguage;
   if (patch.transcript !== undefined) data.transcript = patch.transcript;
+  if (patch.audioSeconds !== undefined) data.audioSeconds = patch.audioSeconds;
   if (patch.content !== undefined)
     data.content = patch.content ? JSON.stringify(patch.content) : null;
   if (patch.freeVisitDeadline !== undefined)

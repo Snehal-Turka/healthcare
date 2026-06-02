@@ -637,6 +637,22 @@ textarea:focus-visible {
   background: linear-gradient(to bottom, var(--background) 60%, transparent);
 }
 
+.report-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-meta-chip {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface-glass);
+  color: var(--muted);
+  padding: 6px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
 /* Timing strip */
 .timing-strip {
   display: flex;

@@ -48,11 +48,13 @@ describeWithDatabase("PrismaReportRepository with Postgres", () => {
     });
     createdIds.push(created.id);
     expect(created.status).toBe("processing");
+    expect(created.audioSeconds).toBeNull();
     expect(created.content).toBeNull();
 
     const updated = await repo.update(created.id, {
       status: "ready",
       transcript: "hello",
+      audioSeconds: 95,
       content: {
         riskFlags: [],
         summary: ["a"],
@@ -80,6 +82,7 @@ describeWithDatabase("PrismaReportRepository with Postgres", () => {
       generatedAt: "2026-05-25T09:00:00.000Z",
     });
     expect(updated.status).toBe("ready");
+    expect(updated.audioSeconds).toBe(95);
     expect(updated.content?.summary).toEqual(["a"]);
     expect(updated.stageTimings.transcribeMs).toBe(120);
     expect(updated.apiCost?.totals).toEqual([
@@ -88,9 +91,10 @@ describeWithDatabase("PrismaReportRepository with Postgres", () => {
 
     const fetched = await repo.get(created.id);
     expect(fetched?.transcript).toBe("hello");
+    expect(fetched?.audioSeconds).toBe(95);
     expect(fetched?.apiCost?.lineItems[0].model).toBe("gpt-5.4");
 
     const all = await repo.list();
-    expect(all.some((report) => report.id === created.id)).toBe(true);
+    expect(all.some((report) => report.id === created.id && report.audioSeconds === 95)).toBe(true);
   });
 });

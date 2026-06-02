@@ -30,6 +30,7 @@ export function Recorder({
   disabled?: boolean;
 }) {
   const [recording, setRecording] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [microphonePermissionDenied, setMicrophonePermissionDenied] =
@@ -113,6 +114,7 @@ export function Recorder({
     if (microphonePermissionDenied) return;
 
     setError(null);
+    setStopping(false);
     setLiveTranscript("");
     segmentsRef.current = [];
     durationsRef.current = [];
@@ -158,35 +160,40 @@ export function Recorder({
 
   const stop = async () => {
     const recorder = recorderRef.current;
-    if (!recorder) return;
+    if (!recorder || stopping) return;
 
     setError(null);
-    await recorder.stop();
-    setRecording(false);
-    recorderRef.current = null;
+    setStopping(true);
+    try {
+      await recorder.stop();
+      setRecording(false);
+      recorderRef.current = null;
 
-    await Promise.allSettled(pendingRef.current);
-    const transcript = stitchTranscripts(transcriptPartsRef.current);
-    if (!transcript.trim()) {
-      setError("Could not transcribe the recording. Please try again.");
-      return;
-    }
+      await Promise.allSettled(pendingRef.current);
+      const transcript = stitchTranscripts(transcriptPartsRef.current);
+      if (!transcript.trim()) {
+        setError("Could not transcribe the recording. Please try again.");
+        return;
+      }
 
-    const audio = new Blob(segmentsRef.current.filter(Boolean), {
-      type: recorder.mimeType,
-    });
-    const durationMs = durationsRef.current.reduce((sum, ms) => sum + ms, 0);
-    if (!reportIdRef.current) {
-      setError("Report session was lost. Please try again.");
-      return;
+      const audio = new Blob(segmentsRef.current.filter(Boolean), {
+        type: recorder.mimeType,
+      });
+      const durationMs = durationsRef.current.reduce((sum, ms) => sum + ms, 0);
+      if (!reportIdRef.current) {
+        setError("Report session was lost. Please try again.");
+        return;
+      }
+      onComplete(
+        audio,
+        transcript,
+        recorder.mimeType,
+        reportIdRef.current,
+        durationMs,
+      );
+    } finally {
+      setStopping(false);
     }
-    onComplete(
-      audio,
-      transcript,
-      recorder.mimeType,
-      reportIdRef.current,
-      durationMs,
-    );
   };
 
   const recordDisabled = disabled || microphonePermissionDenied;
@@ -225,6 +232,8 @@ export function Recorder({
           <button
             type="button"
             onClick={stop}
+            disabled={stopping}
+            aria-busy={stopping}
             className="button-primary"
           >
             <svg
@@ -236,12 +245,12 @@ export function Recorder({
             >
               <rect x="4" y="4" width="16" height="16" rx="2" />
             </svg>
-            Stop &amp; generate report
+            {stopping ? "Preparing report..." : "Stop & generate report"}
           </button>
         )}
         {recording && (
           <span className="live-indicator" aria-live="polite">
-            Recording
+            {stopping ? "Preparing report" : "Recording"}
           </span>
         )}
       </div>
@@ -254,7 +263,11 @@ export function Recorder({
       )}
 
       {visibleError && (
-        <p className="error-note" id="recording-error" style={{ marginTop: 10 }}>
+        <p
+          className="error-note"
+          id="recording-error"
+          style={{ marginTop: 10 }}
+        >
           {visibleError}
         </p>
       )}

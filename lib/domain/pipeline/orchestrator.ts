@@ -12,6 +12,7 @@ import {
   computeFreeVisitDeadline,
   computeMedicineExpiry,
 } from "@/lib/domain/report/rules";
+import { normalizeAudioSeconds } from "@/lib/domain/report/audio-duration";
 import type {
   ReportRecord,
   ReportRepository,
@@ -62,6 +63,7 @@ export async function* runReportPipeline(
 ): AsyncGenerator<PipelineEvent> {
   const now = deps.now ?? (() => new Date());
   const timings: StageTimings = {};
+  const audioSeconds = normalizeAudioSeconds(input.audioSeconds);
   let apiCost: ApiCost | null = null;
   let reportId: string | null = null;
 
@@ -80,7 +82,11 @@ export async function* runReportPipeline(
         input.mimeType,
       );
       if (!input.reportId)
-        return deps.repo.create({ providerId: input.providerId, audioRef });
+        return deps.repo.create({
+          providerId: input.providerId,
+          audioRef,
+          audioSeconds,
+        });
 
       const existing = await deps.repo.get(input.reportId);
       if (!existing) throw new Error(`Report not found: ${input.reportId}`);
@@ -88,6 +94,7 @@ export async function* runReportPipeline(
       return deps.repo.update(input.reportId, {
         providerId: input.providerId,
         audioRef,
+        audioSeconds,
       });
     });
     timings.ingestMs = ingest.ms;
@@ -153,6 +160,7 @@ export async function* runReportPipeline(
     const finalized = await deps.repo.update(reportId, {
       status: "ready",
       content,
+      audioSeconds,
       stageTimings: timings,
       apiCost,
       generatedAt: generatedAt.toISOString(),
@@ -167,6 +175,7 @@ export async function* runReportPipeline(
       await deps.repo.update(reportId, {
         status: "failed",
         error: message,
+        audioSeconds,
         stageTimings: timings,
       });
     yield { type: "error", reportId, message };

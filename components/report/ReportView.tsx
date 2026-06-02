@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReportRecord } from "@/lib/adapters/repository/report-repository";
 import type { ReportContent } from "@/lib/domain/report/schema";
 import { RiskFlags } from "./RiskFlags";
@@ -8,8 +8,8 @@ import { MedicationTable } from "./MedicationTable";
 import { NextMeeting } from "./NextMeeting";
 import { Deadlines } from "./Deadlines";
 import { ReportActions } from "./ReportActions";
-import { Timings } from "./Timings";
-import { ApiCost } from "./ApiCost";
+import { logReportDiagnostics } from "./reportDiagnostics";
+import { formatAudioDuration } from "@/lib/domain/report/audio-duration";
 
 function Section({
   title,
@@ -39,6 +39,11 @@ function ReportEditor({ report }: { report: ReportRecord }) {
       nextMeeting: null,
     },
   );
+  const audioDuration = formatAudioDuration(report.audioSeconds);
+
+  useEffect(() => {
+    logReportDiagnostics(report);
+  }, [report]);
 
   return (
     <div id="printable" className="report-workspace">
@@ -48,8 +53,13 @@ function ReportEditor({ report }: { report: ReportRecord }) {
         freeVisitDeadline={report.freeVisitDeadline}
         medicineExpiryDate={report.medicineExpiryDate}
       />
-      <Timings timings={report.stageTimings} />
-      <ApiCost cost={report.apiCost} />
+      {audioDuration && (
+        <div className="report-meta-row">
+          <span className="report-meta-chip">
+            Audio duration: {audioDuration}
+          </span>
+        </div>
+      )}
       <Section title="Risk / Safety Flags">
         <RiskFlags flags={content.riskFlags} />
       </Section>

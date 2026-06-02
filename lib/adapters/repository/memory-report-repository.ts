@@ -17,6 +17,7 @@ export class MemoryReportRepository implements ReportRepository {
       audioRef: input.audioRef,
       detectedLanguage: null,
       transcript: null,
+      audioSeconds: input.audioSeconds ?? null,
       content: null,
       freeVisitDeadline: null,
       medicineExpiryDate: null,

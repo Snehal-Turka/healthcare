@@ -151,6 +151,31 @@ describe("runReportPipeline", () => {
     expect(final.report.audioRef).toMatch(/\.mp3$/);
   });
 
+  it("persists normalized audio duration seconds on the final report", async () => {
+    const repo = new MemoryReportRepository();
+    const events = await collect(
+      runReportPipeline(
+        {
+          audio: new Uint8Array([1]),
+          mimeType: "audio/webm",
+          providerId: "openai",
+          transcript: "already transcribed",
+          audioSeconds: 94.6,
+        },
+        deps(repo),
+      ),
+    );
+
+    const final = events.find((e) => e.type === "report") as Extract<
+      PipelineEvent,
+      { type: "report" }
+    >;
+    expect(final.report.audioSeconds).toBe(95);
+
+    const persisted = await repo.get(final.report.id);
+    expect(persisted?.audioSeconds).toBe(95);
+  });
+
   it("reuses a live session report and preserves server-recorded chunk costs", async () => {
     const repo = new MemoryReportRepository();
     const session = await repo.create({

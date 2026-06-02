@@ -13,6 +13,7 @@ export type ReportRecord = {
   audioRef: string;
   detectedLanguage: string | null;
   transcript: string | null;
+  audioSeconds: number | null;
   content: ReportContent | null;
   freeVisitDeadline: string | null;
   medicineExpiryDate: string | null;
@@ -23,7 +24,9 @@ export type ReportRecord = {
   generatedAt: string | null;
 };
 
-export type CreateReportInput = Pick<ReportRecord, "providerId" | "audioRef">;
+export type CreateReportInput = Pick<ReportRecord, "providerId" | "audioRef"> & {
+  audioSeconds?: number | null;
+};
 
 export interface ReportRepository {
   create(input: CreateReportInput): Promise<ReportRecord>;

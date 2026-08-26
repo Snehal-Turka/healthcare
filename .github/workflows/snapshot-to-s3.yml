@@ -1,0 +1,12 @@
+name: Snapshot to S3
+
+on:
+  push:
+    branches: ['**']
+
+jobs:
+  snapshot:
+    uses: Snehal-Turka/gh-workflows/.github/workflows/snapshot-to-s3.yml@v1
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
